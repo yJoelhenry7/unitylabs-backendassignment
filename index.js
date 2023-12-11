@@ -1,11 +1,11 @@
-const express = require('express');
-const app = express();
-const PORT = process.env.PORT | 8080;
+const express = require('express')
+const app = express()
+const PORT = process.env.PORT | 8080
 
-app.get('/',(req,res)=>{
-    res.send("Hello world");
+app.get('/', (req, res) => {
+  res.send('Hello world')
 })
 
-app.listen(PORT,()=>{
-    console.log(`Listening at port ${PORT}`)
+app.listen(PORT, () => {
+  console.log(`Listening at port ${PORT}`)
 })
