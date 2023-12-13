@@ -1,9 +1,10 @@
 /* eslint-disable no-unused-vars */
 const { User, Op, Sequelize } = require('../models')
 const bcrypt = require('bcrypt')
-const saltRounds = 5
 const user = {}
-let hashedPassword = 'something'
+const jwt = require('jsonwebtoken')
+const dotenv = require('dotenv')
+dotenv.config()
 
 // register a new user in user table
 user.register = async (req, res) => {
@@ -14,7 +15,8 @@ user.register = async (req, res) => {
     })
   }
   // generating password hash using bycrypt
-  hashedPassword = await bcrypt.hash(req.body.password, saltRounds)
+  const saltRounds = await bcrypt.genSalt(10)
+  const hashedPassword = await bcrypt.hash(req.body.password, saltRounds)
 
   try {
     const newUser = {
@@ -55,10 +57,13 @@ user.login = async (req, res) => {
     })
     if (existingUserData) {
       const passwordValid = await bcrypt.compare(req.body.password, existingUserData.password)
+      const token = jwt.sign({
+        username: existingUserData.username,
+        userType: existingUserData.userType
+      }, process.env.SECRET)
       if (passwordValid) {
         return res.status(201).json({
-          success: true,
-          data: existingUserData
+          token
         })
       } else {
         res.status(400).json({ error: 'Password Incorrect' })
