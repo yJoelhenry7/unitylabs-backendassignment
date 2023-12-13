@@ -1,6 +1,9 @@
 /* eslint-disable no-unused-vars */
 const { User, Op, Sequelize } = require('../models')
+const bcrypt = require('bcrypt')
+const saltRounds = 5
 const user = {}
+let hashedPassword = 'something'
 
 // register a new user in user table
 user.register = async (req, res) => {
@@ -10,10 +13,13 @@ user.register = async (req, res) => {
       message: 'Content can not be Empty!'
     })
   }
+  // generating password hash using bycrypt
+  hashedPassword = await bcrypt.hash(req.body.password, saltRounds)
+
   try {
     const newUser = {
       username: req.body.username,
-      password: req.body.password,
+      password: hashedPassword,
       userType: req.body.userType
     }
     const newUserData = await User.create(newUser)
@@ -42,16 +48,24 @@ user.login = async (req, res) => {
       username: req.body.username,
       password: req.body.password
     }
-    const existingUserData = await User.findAll({
+    const existingUserData = await User.findOne({
       where: {
-        username: userData.username,
-        password: userData.password
+        username: userData.username
       }
     })
-    return res.status(201).json({
-      success: true,
-      data: existingUserData
-    })
+    if (existingUserData) {
+      const passwordValid = await bcrypt.compare(req.body.password, existingUserData.password)
+      if (passwordValid) {
+        return res.status(201).json({
+          success: true,
+          data: existingUserData
+        })
+      } else {
+        res.status(400).json({ error: 'Password Incorrect' })
+      }
+    } else {
+      res.status(404).json({ error: 'User does not exist' })
+    }
   } catch (error) {
     return res.status(500).json({
       success: false,
