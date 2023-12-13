@@ -6,7 +6,13 @@ const dotenv = require('dotenv')
 dotenv.config()
 
 product.createCatalog = async (req, res) => {
-  await res.send('product added')
+  const verifyToken = jwt.verify(req.body.token, process.env.SECRET)
+  const productList = req.body.productList
+  if (verifyToken.userType === 'seller') {
+    await res.status(201).json({
+      productList
+    })
+  }
 }
 product.orders = async (req, res) => {
   await res.send('products data')
