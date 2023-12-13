@@ -10,8 +10,10 @@ app.use(express.urlencoded({ extended: true }))
 
 // -----------------------Routes---------------------------------------------------------
 const userRoute = require('./routes/userRoute')
+const productRoute = require('./routes/productRoute')
 
 app.use('/api/auth/', userRoute)
+app.use('/api/seller/', productRoute)
 
 app.listen(PORT, () => {
   console.log(`Listening at port ${PORT}`)

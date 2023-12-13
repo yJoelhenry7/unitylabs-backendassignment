@@ -68,10 +68,24 @@ user.login = async (req, res) => {
     })
     if (existingUserData) {
       const passwordValid = await bcrypt.compare(req.body.password, existingUserData.password)
-      const token = jwt.sign({
+      let token = jwt.sign({
         username: existingUserData.username,
         userType: existingUserData.userType
       }, process.env.SECRET)
+      // if the existing user is seller we include sellerId in the token payload
+      if (existingUserData.userType === 'seller') {
+        const sellerData = await Seller.findOne({
+          where: {
+            username: userData.username
+          }
+        })
+        token = jwt.sign({
+          username: existingUserData.username,
+          userType: existingUserData.userType,
+          sellerId: sellerData.id
+        }, process.env.SECRET)
+      }
+      // checking if the password is valid or not
       if (passwordValid) {
         return res.status(201).json({
           token
