@@ -1,10 +1,11 @@
 /* eslint-disable no-unused-vars */
-const { User, Op, Sequelize } = require('../models')
+const { User, Seller, Op, Sequelize } = require('../models')
 const bcrypt = require('bcrypt')
 const user = {}
-const jwt = require('jsonwebtoken')
+const jwt = require('jsonwebtoken') // jsonwebtoken used to generate authorization token
 const dotenv = require('dotenv')
 dotenv.config()
+const { v4: uuidv4 } = require('uuid') // uuid is used to generate random unique Id for catalog Id
 
 // register a new user in user table
 user.register = async (req, res) => {
@@ -14,8 +15,9 @@ user.register = async (req, res) => {
       message: 'Content can not be Empty!'
     })
   }
-  // generating password hash using bycrypt
+  // generating saltRounds using bycrypt
   const saltRounds = await bcrypt.genSalt(10)
+  // generating password hash using bycrypt
   const hashedPassword = await bcrypt.hash(req.body.password, saltRounds)
 
   try {
@@ -24,6 +26,15 @@ user.register = async (req, res) => {
       password: hashedPassword,
       userType: req.body.userType
     }
+    // if the newuser is a seller register user in seller table
+    if (newUser.userType === 'seller') {
+      const newSeller = {
+        sellerName: req.body.username,
+        catalogId: uuidv4()
+      }
+      await Seller.create(newSeller)
+    }
+    // adding new user to user table
     const newUserData = await User.create(newUser)
     return res.status(201).json({
       success: true,
